@@ -29,7 +29,7 @@ npm run start
 ## Screenshots
 
 ### Mainpage
-![Main Page](screenshots/mainpag.PNG "mainpag")
+![Main Page](https://raw.githubusercontent.com/huargu/ServerlessBacklog/master/screenshots/mainpag.png "mainpag")
 
 ### Sprint backlogs
 
