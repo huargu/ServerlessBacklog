@@ -25,3 +25,17 @@ cd client
 npm install
 npm run start
 ```
+
+## Screenshots
+
+### Mainpage
+![Alt text](screenshots/mainpag.PNG?raw=true "mainpag")
+
+### Sprint backlogs
+
+![Alt text](screenshots/sprintbacklogs.PNG?raw=true "sprintbacklogs")
+![Alt text](screenshots/sprintbacklogs2.PNG?raw=true "sprintbacklogs2")
+
+### Edit backlog
+
+![Alt text](screenshots/editbacklog.PNG?raw=true "editbacklog")
