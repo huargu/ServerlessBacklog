@@ -1,21 +1,16 @@
 import dateFormat from 'dateformat'
 import { History } from 'history'
-import update from 'immutability-helper'
 import * as React from 'react'
 import {
   Button,
-  Checkbox,
   Divider,
-  Dropdown,
   Grid,
   Header,
   Icon,
-  Input,
-  Image,
   Loader
 } from 'semantic-ui-react'
 
-import { createBacklog, deleteBacklog, getBacklogs, getSprintBacklogs, getSprints, patchBacklog } from '../api/backlogs-api'
+import { deleteBacklog, getSprintBacklogs } from '../api/backlogs-api'
 import Auth from '../auth/Auth'
 import { Backlog } from '../types/Backlog'
 

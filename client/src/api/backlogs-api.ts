@@ -56,6 +56,17 @@ export async function createBacklog(
   return response.data.item
 }
 
+export async function createSprint(
+  idToken: string
+): Promise<void> {
+  const response = await Axios.post(`${apiEndpoint}/sprint`,  JSON.stringify(''), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    }
+  })
+}
+
 export async function patchBacklog(
   idToken: string,
   backlogId: string,
@@ -79,21 +90,4 @@ export async function deleteBacklog(
       'Authorization': `Bearer ${idToken}`
     }
   })
-}
-
-export async function getUploadUrl(
-  idToken: string,
-  backlogId: string
-): Promise<string> {
-  const response = await Axios.post(`${apiEndpoint}/backlog/${backlogId}/attachment`, '', {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`
-    }
-  })
-  return response.data.uploadUrl
-}
-
-export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
-  await Axios.put(uploadUrl, file)
 }

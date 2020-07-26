@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Form, Button, Dropdown, DropdownProps } from 'semantic-ui-react'
 import Auth from '../auth/Auth'
-import { getSprints, uploadFile, patchBacklog } from '../api/backlogs-api'
+import { getSprints, patchBacklog } from '../api/backlogs-api'
 import { SprintType } from '../types/Sprint'
 
 interface EditBacklogProps {

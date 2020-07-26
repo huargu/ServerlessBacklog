@@ -1,22 +1,19 @@
 import dateFormat from 'dateformat'
 import { History } from 'history'
-import update from 'immutability-helper'
 import * as React from 'react'
 import {
   Button,
-  Checkbox,
   Divider,
   Dropdown,
   Grid,
   Header,
   Icon,
   Input,
-  Image,
   Loader,
   DropdownProps
 } from 'semantic-ui-react'
 
-import { createBacklog, deleteBacklog, getBacklogs, getSprintBacklogs, getSprints, patchBacklog } from '../api/backlogs-api'
+import { createBacklog, deleteBacklog, getBacklogs, createSprint, getSprints } from '../api/backlogs-api'
 import Auth from '../auth/Auth'
 import { Backlog } from '../types/Backlog'
 import { SprintType } from '../types/Sprint'
@@ -53,13 +50,18 @@ export class Backlogs extends React.PureComponent<BacklogsProps, BacklogsState> 
     this.props.history.push(`/backlogs/${backlogId}/edit`)
   }
 
+  onCreateSprintButtonClick = async () => {
+    await createSprint(this.props.auth.getIdToken())
+    const sprints = await getSprints(this.props.auth.getIdToken())
+    this.setState({sprints})
+  }
+
   onSprintChange = (sprintId: string) => {
     this.props.history.push(`/sprints/${sprintId}`)
   }
 
   onBacklogCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
-      const dueDate = this.calculateDueDate()
       const newBacklog = await createBacklog(this.props.auth.getIdToken(), {
         itemName: this.state.newBacklogName
       })
@@ -178,7 +180,7 @@ export class Backlogs extends React.PureComponent<BacklogsProps, BacklogsState> 
         text: sprint.sprintId,
         value: sprint.sprintId
       }
-    })
+    }).sort((a, b) => (Number(a.key) > Number(b.key) ? 1 : -1))
 
     return (<Grid.Row>
       <Grid.Column>
@@ -194,6 +196,14 @@ export class Backlogs extends React.PureComponent<BacklogsProps, BacklogsState> 
           onChange={this.handleChange}
         />
       </Grid.Column>
+      <Grid.Column width={1} floated="right">
+                <Button
+                  color="blue"
+                  onClick={() => this.onCreateSprintButtonClick()}
+                >
+                  Create Sprint
+                </Button>
+              </Grid.Column>
       <Grid.Column width={16}>
         <Divider />
       </Grid.Column>
@@ -240,12 +250,5 @@ export class Backlogs extends React.PureComponent<BacklogsProps, BacklogsState> 
         })}
       </Grid>
     )
-  }
-
-  calculateDueDate(): string {
-    const date = new Date()
-    date.setDate(date.getDate() + 7)
-
-    return dateFormat(date, 'yyyy-mm-dd') as string
   }
 }
