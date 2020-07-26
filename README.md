@@ -29,13 +29,13 @@ npm run start
 ## Screenshots
 
 ### Mainpage
-![Alt text](screenshots/mainpag.PNG "mainpag")
+![Main Page](screenshots/mainpag.PNG "mainpag")
 
 ### Sprint backlogs
 
-![Alt text](screenshots/sprintbacklogs.PNG "sprintbacklogs")
-![Alt text](screenshots/sprintbacklogs2.PNG "sprintbacklogs2")
+![Sprint Backlogs](https://raw.githubusercontent.com/huargu/ServerlessBacklog/master/screenshots/sprintbacklogs.png "sprintbacklogs")
+![Sprint Backlogs](https://raw.githubusercontent.com/huargu/ServerlessBacklog/master/screenshots/sprintbacklogs2.png "sprintbacklogs2")
 
 ### Edit backlog
 
-![Alt text](screenshots/editbacklog.PNG "editbacklog")
+![Edit backlog](https://raw.githubusercontent.com/huargu/ServerlessBacklog/master/screenshots/editbacklog.png "editbacklog")
