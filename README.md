@@ -3,7 +3,7 @@
 # Features
 
 - Create sprint
-- Create backlog Item
+- Create backlog item for your user
 - Move item into any sprint
 - Delete backlog item
 
