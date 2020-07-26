@@ -29,13 +29,13 @@ npm run start
 ## Screenshots
 
 ### Mainpage
-![Alt text](screenshots/mainpag.PNG?raw=true "mainpag")
+![Alt text](screenshots/mainpag.PNG "mainpag")
 
 ### Sprint backlogs
 
-![Alt text](screenshots/sprintbacklogs.PNG?raw=true "sprintbacklogs")
-![Alt text](screenshots/sprintbacklogs2.PNG?raw=true "sprintbacklogs2")
+![Alt text](screenshots/sprintbacklogs.PNG "sprintbacklogs")
+![Alt text](screenshots/sprintbacklogs2.PNG "sprintbacklogs2")
 
 ### Edit backlog
 
-![Alt text](screenshots/editbacklog.PNG?raw=true "editbacklog")
+![Alt text](screenshots/editbacklog.PNG "editbacklog")
