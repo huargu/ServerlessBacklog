@@ -1,0 +1,399 @@
+service:
+  name: huargu-sbacklog-app
+
+plugins:
+  - serverless-webpack
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
+  - serverless-iam-roles-per-function
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+
+  environment:
+    BACKLOGS_TABLE: Backlogs-${self:provider.stage}
+    BACKLOGS_INDEX_NAME: BacklogsTableIndex
+    SPRINTS_TABLE: Sprints-${self:provider.stage}
+    SPRINTS_INDEX_NAME: SprintsTableIndex
+    AUTH0_JWKS_URL: https://dev-3r4n3x35.us.auth0.com/.well-known/jwks.json
+    APP_NAME: huargu-sbacklog-app
+
+custom:
+  serverless-offline:
+    port: 3003
+   
+  dynamodb:
+    stages:
+      - ${self:provider.stage}
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true   
+  
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Backlog API
+        description: Backlog application
+    models:
+      - name: CreateBacklogRequest
+        contentType: application/json
+        schema: ${file(models/create-backlog-request.json)}
+      - name: UpdateBacklogRequest
+        contentType: application/json
+        schema: ${file(models/update-backlog-request.json)}  
+      - name: SprintRequest
+        contentType: application/json
+        schema: ${file(models/sprint-request.json)}
+
+functions:
+
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
+  CreateBacklog:
+    handler: src/lambda/http/createBacklog.handler
+    events:
+      - http:
+          method: post
+          path: backlog
+          authorizer: Auth
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new backlog item
+            description: Create a new backlog item
+            requestModels:
+              'application/json': CreateBacklogRequest
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-create-backlog-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  CreateSprint:
+    handler: src/lambda/http/createSprint.handler
+    events:
+      - http:
+          method: post
+          path: sprint
+          authorizer: Auth
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new sprint item
+            description: Create a new sprint item
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-create-sprint-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}/index/${self:provider.environment.SPRINTS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  GetSprintBacklogs:
+    handler: src/lambda/http/getSprintBacklogs.handler
+    events:
+      - http:
+          method: get
+          path: sprint/{sprintId}/backlog
+          authorizer: Auth
+          cors: true
+          documentation:
+            summary: Get sprint backlogs
+            description: Get backlogs of selected sprint
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-get-sprintbacklog-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}/index/${self:provider.environment.BACKLOGS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  GetSprint:
+    handler: src/lambda/http/getSprint.handler
+    events:
+      - http:
+          method: get
+          path: sprint/{sprintId}
+          authorizer: Auth
+          cors: true
+          documentation:
+            summary: Get sprint
+            description: Get selected sprint
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-get-sprint-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}/index/${self:provider.environment.SPRINTS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  GetSprints:
+    handler: src/lambda/http/getSprints.handler
+    events:
+      - http:
+          method: get
+          path: sprint
+          authorizer: Auth
+          cors: true
+          documentation:
+            summary: Get sprints
+            description: Get all sprints
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-get-sprints-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}/index/${self:provider.environment.SPRINTS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}/index/${self:provider.environment.SPRINTS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  GetBacklog:
+    handler: src/lambda/http/getBacklog.handler
+    events:
+      - http:
+          method: get
+          path: backlog/{backlogId}
+          authorizer: Auth
+          cors: true
+          documentation:
+            summary: Get backlog
+            description: Get selected backlog
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-get-backlog-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}/index/${self:provider.environment.BACKLOGS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  DeleteBacklog:
+    handler: src/lambda/http/deleteBacklog.handler
+    events:
+      - http:
+          method: delete
+          path: backlog/{backlogId}
+          authorizer: Auth
+          cors: true
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-delete-backlog-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}   
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}/index/${self:provider.environment.BACKLOGS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  DeleteSprint:
+    handler: src/lambda/http/deleteBacklog.handler
+    events:
+      - http:
+          method: delete
+          path: sprint/{sprintId}
+          authorizer: Auth
+          cors: true
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-delete-sprint-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}   
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SPRINTS_TABLE}/index/${self:provider.environment.SPRINTS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  UpdateBacklog:
+    handler: src/lambda/http/updateBacklog.handler
+    events:
+      - http:
+          method: patch
+          path: backlog/{backlogId}
+          authorizer: Auth
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a backlog item
+            description: Update a backlog item
+            requestModels:
+              'application/json': UpdateBacklogRequest
+    iamRoleStatementsName: ${self:provider.environment.APP_NAME}-update-backlog-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BACKLOGS_TABLE}/index/${self:provider.environment.BACKLOGS_INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    BacklogsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+          - AttributeName: backlogId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: backlogId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.BACKLOGS_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.BACKLOGS_INDEX_NAME}
+            KeySchema:
+              - AttributeName: backlogId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
+
+    SprintsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: createdAt
+            AttributeType: S
+          - AttributeName: sprintId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sprintId
+            KeyType: HASH
+          - AttributeName: createdAt
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.SPRINTS_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.SPRINTS_INDEX_NAME}
+            KeySchema:
+              - AttributeName: sprintId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
